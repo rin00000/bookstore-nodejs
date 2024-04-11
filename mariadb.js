@@ -1,7 +1,7 @@
 const mariadb = require("mysql2");
 
 const connection = mariadb.createConnection({
-  host: "localhost",
+  host: "127.0.0.1",
   user: "root",
   password: "root",
   database: "Bookstore",
