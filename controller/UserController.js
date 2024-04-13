@@ -1,4 +1,3 @@
-// 이해린
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 const jwt = require("jsonwebtoken");
