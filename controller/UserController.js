@@ -1,3 +1,4 @@
+// 이해린
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 const jwt = require("jsonwebtoken");
@@ -7,29 +8,28 @@ dotenv.config();
 
 const join = (req, res) => {
   const { email, password } = req.body;
-  console.log("I'm here");
-  const salt = crypto.randomBytes(64).toString("base64");
+
+  const salt = crypto.randomBytes(10).toString("base64");
   const hashPassword = crypto
-    .pbkdf2Sync(password, salt, 10000, 64, "sha512")
+    .pbkdf2Sync(password, salt, 10000, 10, "sha512")
     .toString("base64");
 
-  let sql = `INSERT INTO users (email, password) VALUES(?,?)`;
-  let values = [email, password];
-
+  const sql = `INSERT INTO users(email, password, salt) VALUES(?, ?, ?)`;
+  const values = [email, hashPassword, salt];
   conn.query(sql, values, (err, results) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
-    } else {
-      res.status(StatusCodes.CREATED).json(results);
     }
+
+    res.status(StatusCodes.CREATED).json(results);
   });
 };
 
 const login = (req, res) => {
   const { email, password } = req.body;
 
-  let sql = `SELECT * FROM users WHERE email= ?`;
+  const sql = `SELECT * FROM users WHERE email = ?`;
   conn.query(sql, email, (err, results) => {
     if (err) {
       console.log(err);
@@ -37,22 +37,29 @@ const login = (req, res) => {
     }
 
     const loginUser = results[0];
-    if (loginUser && loginUser.password == password) {
-      // token 발급
+
+    const hashPassword = crypto
+      .pbkdf2Sync(password, loginUser.salt, 10000, 10, "sha512")
+      .toString("base64");
+
+    if (loginUser && loginUser.password === hashPassword) {
       const token = jwt.sign(
         {
           email: loginUser.email,
         },
         process.env.PRIVATE_KEY,
         {
-          expiresIn: "5m",
+          expiresIn: "30m",
           issuer: "rin",
         }
       );
 
-      res.cookie("token", token, { httpOnly: true });
+      res.cookie("token", token, {
+        httpOnly: true,
+      });
+      console.log(token);
 
-      return res.status(StatusCodes.OK).json(results);
+      res.status(StatusCodes.OK).json(results);
     } else {
       res.status(StatusCodes.UNAUTHORIZED).end();
     }
@@ -103,6 +110,7 @@ const passwordReset = (req, res) => {
     }
   });
 };
+
 module.exports = {
   join,
   login,
