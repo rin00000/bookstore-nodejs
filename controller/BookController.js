@@ -1,6 +1,7 @@
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 
+// 이해린
 // (카테고리 별, 신간 여부) 전체 도서 목록 조회
 const allBooks = (req, res) => {
   let { category_id, news, limit, currentPage } = req.query; // limit는 page 당 도서 수
