@@ -1,13 +1,11 @@
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 
-// 이해린
-// (카테고리 별, 신간 여부) 전체 도서 목록 조회
 const allBooks = (req, res) => {
   let { category_id, news, limit, currentPage } = req.query; // limit는 page 당 도서 수
   let offset = limit * (currentPage - 1);
 
-  let sql = `SELECT * FROM books `;
+  let sql = `SELECT *,(SELECT count(*) FROM likes WHERE books.id=liked_book_id) AS likes FROM books `;
   let values = [];
 
   if (category_id && news) {
@@ -41,13 +39,18 @@ const allBooks = (req, res) => {
 
 // 개별 도서 조회
 const bookDetail = (req, res) => {
-  let id = parseInt(req.params.id);
+  let { user_id } = req.body;
+  let book_id = req.params.id;
 
-  const sql = `SELECT * FROM books
+  const sql = `SELECT *,
+                    (SELECT count(*) FROM likes WHERE liked_book_id=books.id) AS likes,
+                    (SELECT EXISTS (SELECT * FROM likes WHERE user_id=? AND liked_book_id=?)) AS liked
+                    FROM books
                     LEFT JOIN category
-                    ON books.category_id = category.id
+                    ON books.category_id = category.category_id
                     WHERE books.id = ?`;
-  conn.query(sql, id, (err, results) => {
+  let values = [user_id, book_id, book_id];
+  conn.query(sql, values, (err, results) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
