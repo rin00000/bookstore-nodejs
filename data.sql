@@ -66,7 +66,6 @@ DELETE FROM cartItems WHERE id = ?;
 // 장바구니에서 선택한(장바구니 도서 id) 아이템 목록 조회 (=선택한 장바구니 상품 목록 조회)
 SELECT * FROM Bookshop.cartItems WHERE user_id=1 AND id IN (1,3)
 
-
 // 주문하기
 // 배송 정보 입력
 INSERT INTO delivery (address, receiver, contact) VALUES ("서울시 중구", "김송아", "010-1234-5678");
